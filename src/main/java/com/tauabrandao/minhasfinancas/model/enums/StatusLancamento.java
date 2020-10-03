@@ -1,4 +1,4 @@
-package com.tauabrandao.minhasfinancas.model.entity;
+package com.tauabrandao.minhasfinancas.model.enums;
 
 public enum StatusLancamento {
 
