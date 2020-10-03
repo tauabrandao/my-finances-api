@@ -1,10 +1,13 @@
 package com.tauabrandao.minhasfinancas.service.impl;
 
+import org.springframework.stereotype.Service;
+
 import com.tauabrandao.minhasfinancas.exception.RegraNegocioException;
 import com.tauabrandao.minhasfinancas.model.entity.Usuario;
 import com.tauabrandao.minhasfinancas.model.repository.UsuarioRepository;
 import com.tauabrandao.minhasfinancas.service.UsuarioService;
 
+@Service
 public class UsuarioServiceImpl implements UsuarioService {
 
 	private UsuarioRepository repository;
