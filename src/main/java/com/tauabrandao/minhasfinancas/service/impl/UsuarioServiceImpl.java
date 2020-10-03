@@ -1,9 +1,12 @@
 package com.tauabrandao.minhasfinancas.service.impl;
 
+import java.util.Optional;
+
 import javax.transaction.Transactional;
 
 import org.springframework.stereotype.Service;
 
+import com.tauabrandao.minhasfinancas.exception.ErroAutenticacao;
 import com.tauabrandao.minhasfinancas.exception.RegraNegocioException;
 import com.tauabrandao.minhasfinancas.model.entity.Usuario;
 import com.tauabrandao.minhasfinancas.model.repository.UsuarioRepository;
@@ -21,8 +24,17 @@ public class UsuarioServiceImpl implements UsuarioService {
 
 	@Override
 	public Usuario autenticar(String email, String senha) {
-		// TODO Auto-generated method stub
-		return null;
+		Optional<Usuario> usuario = repository.findByEmail(email);
+		
+		if(!usuario.isPresent()) {
+			throw new ErroAutenticacao("Usuário não encontrado.");
+		}
+		
+		if(!usuario.get().getSenha().equals(senha)) {
+			throw new ErroAutenticacao("Senha inválida");
+		}
+		
+		return usuario.get();
 	}
 
 	@Override
