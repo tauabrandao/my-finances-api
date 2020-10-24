@@ -1,5 +1,6 @@
 package com.tauabrandao.minhasfinancas.service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,5 +16,6 @@ public interface LancamentoService {
 	void atualzarStatus(Lancamento lancamento, StatusLancamento status);
 	void validarLancamento(Lancamento lancamento);
 	Optional<Lancamento> getById(Long id);
+	BigDecimal obterSaldoPorUsuario(Long id);
 
 }
