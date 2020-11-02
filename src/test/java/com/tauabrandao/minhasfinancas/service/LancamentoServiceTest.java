@@ -1,16 +1,23 @@
 package com.tauabrandao.minhasfinancas.service;
 
+import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.data.domain.Example;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.tauabrandao.minhasfinancas.exception.RegraNegocioException;
 import com.tauabrandao.minhasfinancas.model.entity.Lancamento;
+import com.tauabrandao.minhasfinancas.model.entity.Usuario;
 import com.tauabrandao.minhasfinancas.model.enums.StatusLancamento;
 import com.tauabrandao.minhasfinancas.model.repository.LancamentoRepository;
 import com.tauabrandao.minhasfinancas.model.repository.LancamentoRepositoryTest;
@@ -82,24 +89,24 @@ public class LancamentoServiceTest {
 		Mockito.verify(repository, Mockito.times(1)).save(lancamentoSalvo);
 
 	}
-	
+
 	@Test
 	public void deveLancarErroAoTentarAtualizarUmLancamentoQueAindaNaoFoiSalvo() {
 		Lancamento lancamentoASalvar = LancamentoRepositoryTest.criarLancamento();
-		
+
 		Assertions.catchThrowableOfType(() -> service.atualizar(lancamentoASalvar), NullPointerException.class);
 		Mockito.verify(repository, Mockito.never()).save(lancamentoASalvar);
 	}
-	
+
 	@Test
 	public void deveDeletarUmLancamento() {
 		Lancamento lancamento = LancamentoRepositoryTest.criarLancamento();
 		lancamento.setId(1l);
-		
+
 		service.deletar(lancamento);
 		Mockito.verify(repository).delete(lancamento);
 	}
-	
+
 	@Test
 	public void deveLancarErroAoTentarDeletarUmLancamentoQueNaoExista() {
 		Lancamento lancamento = LancamentoRepositoryTest.criarLancamento();
@@ -107,4 +114,86 @@ public class LancamentoServiceTest {
 		Assertions.catchThrowableOfType(() -> service.deletar(lancamento), RegraNegocioException.class);
 	}
 
+	@Test
+	public void deveFiltrarLancamentos() {
+		Lancamento lancamento = LancamentoRepositoryTest.criarLancamento();
+		lancamento.setId(1l);
+
+		List<Lancamento> lista = Arrays.asList(lancamento);
+		Mockito.when(repository.findAll(Mockito.any(Example.class))).thenReturn(lista);
+
+		List<Lancamento> resultado = service.buscar(lancamento);
+
+		Assertions.assertThat(resultado).isNotEmpty().hasSize(1).contains(lancamento);
+	}
+
+	@Test
+	public void deveAtualizarOStatusDeUmLancamento() {
+		Lancamento lancamento = LancamentoRepositoryTest.criarLancamento();
+		lancamento.setId(1l);
+		lancamento.setStatus(StatusLancamento.PENDENTE);
+
+		StatusLancamento novoStatusLancamento = StatusLancamento.EFETIVADO;
+		Mockito.doReturn(lancamento).when(service).atualizar(lancamento);
+
+		service.atualizarStatus(lancamento, novoStatusLancamento);
+
+		Assertions.assertThat(lancamento.getStatus()).isEqualTo(novoStatusLancamento);
+		Mockito.verify(service).atualizar(lancamento);
+	}
+
+	@Test
+	public void deveObterUmLancamentoPorId() {
+		Lancamento lancamento = LancamentoRepositoryTest.criarLancamento();
+		lancamento.setId(1l);
+
+		Mockito.when(repository.findById(1l)).thenReturn(Optional.of(lancamento));
+
+		Optional<Lancamento> lancamentoRetornado = service.getById(1l);
+
+		Assertions.assertThat(lancamentoRetornado.isPresent());
+	}
+
+	@Test
+	public void deveRetornarVazioQuandoBuscaUmLancamentoQueNaoExistePorId() {
+		Mockito.when(repository.findById(1l)).thenReturn(Optional.empty());
+		Optional<Lancamento> lancamentoRetornado = service.getById(1l);
+		Assertions.assertThat(!lancamentoRetornado.isPresent());
+	}
+	
+	@Test
+	public void deveLancarErroAoValidarLancamentoComAtributosInvalidos() {
+		Lancamento lancamento = new Lancamento();
+		
+		Throwable erro = Assertions.catchThrowable(() -> service.validarLancamento(lancamento));
+		Assertions.assertThat(erro).isInstanceOf(RegraNegocioException.class).hasMessage("Informe uma descrição válida");
+		
+		lancamento.setDescricao("salário");
+		
+		erro = Assertions.catchThrowable(() -> service.validarLancamento(lancamento));
+		Assertions.assertThat(erro).isInstanceOf(RegraNegocioException.class).hasMessage("Informe um mes válido");
+		
+		lancamento.setMes(1);
+		
+		erro = Assertions.catchThrowable(() -> service.validarLancamento(lancamento));
+		Assertions.assertThat(erro).isInstanceOf(RegraNegocioException.class).hasMessage("Informe um ano válido");
+		
+		lancamento.setAno(2020);
+		
+		erro = Assertions.catchThrowable(() -> service.validarLancamento(lancamento));
+		Assertions.assertThat(erro).isInstanceOf(RegraNegocioException.class).hasMessage("Informe um usuário válido");
+		
+		lancamento.setUsuario(Usuario.builder().id(1l).build());
+		
+		erro = Assertions.catchThrowable(() -> service.validarLancamento(lancamento));
+		Assertions.assertThat(erro).isInstanceOf(RegraNegocioException.class).hasMessage("Informe um valor válido");
+		
+		lancamento.setValor(BigDecimal.valueOf(10));
+		
+		erro = Assertions.catchThrowable(() -> service.validarLancamento(lancamento));
+		Assertions.assertThat(erro).isInstanceOf(RegraNegocioException.class).hasMessage("Informe um tipo válido");
+		
+
+		
+	}
 }
