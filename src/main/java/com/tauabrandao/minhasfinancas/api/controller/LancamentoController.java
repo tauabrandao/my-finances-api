@@ -85,6 +85,13 @@ public class LancamentoController {
 		
 	}
 	
+	@GetMapping("{id}")
+	public ResponseEntity obterLancamento(@PathVariable("id") Long id) {
+		return service.getById(id)
+				.map(lancamento -> new ResponseEntity(converter(lancamento), HttpStatus.OK))
+				.orElseGet(() -> new ResponseEntity(HttpStatus.NOT_FOUND));
+	}
+	
 	@DeleteMapping("{id}")
 	private ResponseEntity deletar(@PathVariable("id") Long id) {
 		return service.getById(id).map(entity -> {
@@ -117,6 +124,20 @@ public class LancamentoController {
 
 		return lancamento;
 
+	}
+	
+	private LancamentoDTO converter(Lancamento lancamento) {
+		return LancamentoDTO.builder()
+				.id(lancamento.getId())
+				.descricao(lancamento.getDescricao())
+				.valor(lancamento.getValor())
+				.mes(lancamento.getMes())
+				.ano(lancamento.getAno())
+				.status(lancamento.getStatus().name())
+				.tipo(lancamento.getTipo().name())
+				.usuario(lancamento.getUsuario().getId())
+				.build();
+				
 	}
 	
 	@PutMapping("{id}/atualiza-status")
